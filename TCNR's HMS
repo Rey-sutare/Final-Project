@@ -9,6 +9,7 @@ from fpdf import FPDF
 from collections import defaultdict
 from tkinter import PhotoImage
 import re  # for pdf data or doctor limits
+import tkinter.font as tkFont
 
 # Maximum appointments per doctor's slot
 MAX_APPOINTMENTS_PER_SLOT = 2
@@ -578,7 +579,6 @@ def create_admin_window(cursor, mydb):
             search_window.destroy()  # Close the search window
             create_admin_window(cursor, mydb)  # Call the function to create the admin window
 
-                
         search_window = tk.Toplevel(root)
         search_window.title("Search Appointments")
         search_window.geometry("1360x600")
@@ -611,20 +611,34 @@ def create_admin_window(cursor, mydb):
         search_button.grid(row=1, column=1, padx=0, pady=10, sticky="w")
 
         global search_results_tree  # Declare search_results_tree as global
-        search_results_tree = ttk.Treeview(search_frame, columns=("Name", "Date", "Time", "Doctor", "Reason", "Disease"),
-                                        show="headings", height=15)
-        search_results_tree.heading("#1", text="Name")
-        search_results_tree.heading("#2", text="Date")
-        search_results_tree.heading("#3", text="Time")
-        search_results_tree.heading("#4", text="Doctor")
-        search_results_tree.heading("#5", text="Reason")
-        search_results_tree.heading("#6", text="Disease")
+        search_results_tree = ttk.Treeview(search_frame, columns=("ID", "Name", "Age", "Contact Number", "Sex", "Reason", "Doctor", "Time", "Date", "Amount", "Disease"),
+                                            show="headings", height=15)
+        search_results_tree.heading("#1", text="ID")
+        search_results_tree.heading("#2", text="Name")
+        search_results_tree.heading("#3", text="Age")
+        search_results_tree.heading("#4", text="Contact Number")
+        search_results_tree.heading("#5", text="Sex")
+        search_results_tree.heading("#6", text="Reason")
+        search_results_tree.heading("#7", text="Doctor")
+        search_results_tree.heading("#8", text="Time")
+        search_results_tree.heading("#9", text="Date")
+        search_results_tree.heading("#10", text="Amount")
+        search_results_tree.heading("#11", text="Disease")
 
         search_results_tree.grid(row=2, column=0, columnspan=2, padx=10, pady=(20, 10), sticky="nsew")
-        
+
         # Set column widths
-        for i in range(1, 5):
-            search_results_tree.column(i, width=150)
+        search_results_tree.column("#1", width=40)
+        search_results_tree.column("#2", width=150)
+        search_results_tree.column("#3", width=40)
+        search_results_tree.column("#4", width=150)
+        search_results_tree.column("#5", width=150)
+        search_results_tree.column("#6", width=120)
+        search_results_tree.column("#7", width=120)
+        search_results_tree.column("#8", width=150)
+        search_results_tree.column("#9", width=150)
+        search_results_tree.column("#10", width=100)
+        search_results_tree.column("#11", width=100)
 
         # Add alternating row colors
         search_results_tree.tag_configure('oddrow', background='#E8E8E8')
@@ -646,15 +660,13 @@ def create_admin_window(cursor, mydb):
         # Back Button
         back_button_path = "back.png"  # Provide the path to your back button image
         resized_back_button = resize_image(back_button_path, 30, 30)  # Adjust the size as needed
-  
+
         back_button = tk.Button(search_frame, image=resized_back_button, bg="gray", command=back_to_admin_window)
         back_button.image = resized_back_button  # Keep a reference to the image to prevent garbage collection
         back_button.grid(row=0, column=1, pady=(20, 10), padx=10, sticky="e")
 
-       
         search_window.protocol("WM_DELETE_WINDOW", search_window.destroy)
         search_window.mainloop()
-
 
     # Search button
     search_button = tk.Button(admin_frame, text="Search Appointments", command=create_search_window, bg="lightblue", relief="raised", font=("Helvetica", 12), width=20)
@@ -788,16 +800,11 @@ def hms_info():
     info_window.geometry("1360x720")
     info_window.title("About HMS")
 
-    # Create a Canvas with a solid color background
-    canvas = tk.Canvas(info_window, width=1110, height=50, bg="lightgray")
-    canvas.pack()
-
-    # Add a border to the Canvas to simulate an image
-    border = tk.Frame(info_window, bd=10, relief="ridge", bg="white")
-    border.place(relx=0, rely=0, relwidth=1, relheight=1)
+    # Set the background color to white
+    info_window.configure(bg="white")
 
     # Add labels or other widgets to provide information about HMS
-    info_label = tk.Label(border, text="TCNR's HOSPITAL MANAGEMENT SYSTEM", font=("Arial", 20, "bold"), bg="white", fg="black")
+    info_label = tk.Label(info_window, text="TCNR's HOSPITAL MANAGEMENT SYSTEM", font=("Arial", 20, "bold"), bg="white", fg="black")
     info_label.pack(pady=8)
 
     # Create frames for doctors, credibility, and additional info with custom size
@@ -840,7 +847,7 @@ def create_doctors_frame(parent):
     doctors_label.pack(pady=10)
 
     # Create a Treeview widget for displaying the table with styling
-    tree = ttk.Treeview(frame, columns=("Name", "Age", "Sex", "Birthday", "Language Used", "Citizenship", "Religion", "Education", "Contact"), show="headings", selectmode="browse")
+    tree = ttk.Treeview(frame, columns=("Name", "Age", "Sex", "Birthday", "Language Used", "Citizenship", "Religion", "Education", "Contact", "Availability"), show="headings", selectmode="browse")
 
     # Set column headings
     tree.heading("Name", text="Name")
@@ -852,9 +859,11 @@ def create_doctors_frame(parent):
     tree.heading("Religion", text="Religion")
     tree.heading("Education", text="Education")
     tree.heading("Contact", text="Contact")
+    tree.heading("Availability", text="Availability")
+
 
     # Set column widths
-    column_widths = [200, 40, 60, 110, 105, 80, 100, 200, 110]
+    column_widths = [205, 43, 63, 115, 110, 85, 110, 210, 110, 170,]
     for i, width in enumerate(column_widths):
         tree.column(tree['columns'][i], width=width)
 
@@ -864,12 +873,12 @@ def create_doctors_frame(parent):
     style.configure("Treeview", font=("Arial", 12), rowheight=25)
 
     # Sample data (replace this with actual data)
-    data = [("Dra. Trisha Marie Dalusung, PhD ", 30, "Female", "August-08-1993", "English, Tagalog", "Filipino", "Roman Catholic", "Master's Degree in Psychology", "09393027628"),
-            ("Dra. Chloie Ysabelle Festejo, MMLT ", 29, "Female", "March-30-1994", "English, Tagalog", "Filipino", "Roman Catholic", "Master in Medical Lab Technology", "09764129948"),
-            ("Dra. Nykhole Isip, MD", 30, "Female", "May-21-1993", "English, Tagalog", "Filipino", "Roman Catholic", "Doctor of Osteopathic Medicine", "09916910478"),
-            ("Dr. Rey Aldrin Sutare, MSc ", 29, "Male", "January-17-1994", "English, Tagalog", "Filipino", "Roman Catholic", "Master of Science in Optometry", "09108020365")
+    data = [("Dra. Trisha Marie Dalusung, PhD ", 30, "Female", "August-08-1993", "English, Tagalog", "Filipino", "Roman Catholic", "Master's Degree in Psychology", "09393027628", "9:00 AM - 10:00 AM", "2:00 PM - 3:00 PM"),
+            ("Dra. Chloie Ysabelle Festejo, MMLT ", 29, "Female", "March-30-1994", "English, Tagalog", "Filipino", "Roman Catholic", "Master in Medical Lab Technology", "09764129948", "10:00 AM - 11:00 AM", "3:00 PM - 4:00 PM"),
+            ("Dra. Nykhole Isip, MD", 30, "Female", "May-21-1993", "English, Tagalog", "Filipino", "Roman Catholic", "Doctor of Osteopathic Medicine", "09916910478", "7:00 AM - 8:00 AM", "5:00 PM - 6:00 PM"),
+            ("Dr. Rey Aldrin Sutare, MSc ", 29, "Male", "January-17-1994", "English, Tagalog", "Filipino", "Roman Catholic", "Master of Science in Optometry", "09108020365", "11:00 AM - 12:00 PM", "7:00 PM - 8:00 PM")
             ]
-
+                                                                                                                                                       
     # Alternate row colors for better readability
     for i, row in enumerate(data):
         tag = "even" if i % 2 == 0 else "odd"
@@ -1181,13 +1190,14 @@ def show_appointment_summary(appointment_info):
         # Function to save the updated appointment to the database
         def save_updated_appointment():
             global update_values
-            for key, entry in updated_info.items():
-                if isinstance(entry, tk.StringVar):
-                    # For Radiobuttons (reason field)
-                    update_values[key] = entry.get()
-                else:
-                    # For Entry widgets
-                    update_values[key] = entry.get()
+            update_values = {key: entry.get() if hasattr(entry, 'get') else entry for key, entry in updated_info.items()}
+
+            try:
+                update_values["Age"] = int(update_values["Age"])
+                update_values["Contact Number"] = int(update_values["Contact Number"])
+            except ValueError:
+                messagebox.showerror("Error", "Please enter valid integer values for Age and Contact Number.")
+                return
 
             # Check the selected reason and update the amount accordingly
             selected_reason = update_values.get("Reason", "")
@@ -1400,7 +1410,7 @@ def search_appointments():
 def show_search_results(results):
     search_results_tree.delete(*search_results_tree.get_children())  # Clear existing items in the tree
     for result in results:
-        search_results_tree.insert("", "end", values=(result[1], result[8], result[7], result[6], result[5], result[10]))
+        search_results_tree.insert("", "end", values=(result[0],result[1], result[2], result[3], result[4], result[5], result[6], result[7], result[8], result[9], result[10]))
 
 class AppointmentPDF(FPDF):
     def header(self):
